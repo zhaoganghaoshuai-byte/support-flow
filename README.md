@@ -4,6 +4,59 @@
 
 **技术栈：Python 3.12+ · FastAPI · LangChain / LangGraph · SQLAlchemy · SQLite · React 19 · TypeScript · Vite。**
 
+## 界面演示
+
+以下为离线演示模式下的平台截图。
+
+**工作台**：集中查看工单数量、处理状态和最近更新。
+
+![SupportFlow 工作台](docs/screenshots/dashboard.png)
+
+<details>
+<summary>查看登录页面</summary>
+
+支持工程师、提问用户与管理员演示角色切换。
+
+![SupportFlow 登录页面](docs/screenshots/login.png)
+
+</details>
+
+<details>
+<summary>查看 AI 支持助手</summary>
+
+通过多轮咨询开展排查，并查看知识引用和工具执行记录。
+
+![SupportFlow AI 支持助手](docs/screenshots/assistant.png)
+
+</details>
+
+<details>
+<summary>查看工单中心</summary>
+
+按状态筛选工单，查看优先级、处理人与更新进展。
+
+![SupportFlow 工单中心](docs/screenshots/tickets.png)
+
+</details>
+
+<details>
+<summary>查看知识库</summary>
+
+检索与维护团队运维文档，为排查提供知识依据。
+
+![SupportFlow 知识库](docs/screenshots/knowledge.png)
+
+</details>
+
+<details>
+<summary>查看运行记录</summary>
+
+查看任务结果、执行耗时、工具调用次数与模型用量。
+
+![SupportFlow 运行记录](docs/screenshots/runs.png)
+
+</details>
+
 ## 快速开始
 
 需要 Python 3.12+ 和 Node.js 22+。以下命令适用于 Windows PowerShell：
