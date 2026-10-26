@@ -1,0 +1,25 @@
+services:
+  supportflow:
+    build: .
+    ports:
+      - "127.0.0.1:8010:8010"
+    environment:
+      SUPPORTFLOW_AGENT_MODE: ${SUPPORTFLOW_AGENT_MODE:-demo}
+      SUPPORTFLOW_SEED_DEMO: ${SUPPORTFLOW_SEED_DEMO:-true}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      SUPPORTFLOW_API_KEY: ${SUPPORTFLOW_API_KEY:-}
+      SUPPORTFLOW_BASE_URL: ${SUPPORTFLOW_BASE_URL:-}
+      SUPPORTFLOW_MODEL: ${SUPPORTFLOW_MODEL:-}
+    volumes:
+      - supportflow-data:/app/data
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  supportflow-data:
