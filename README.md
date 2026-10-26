@@ -113,7 +113,7 @@ Compose 只向本机发布 `127.0.0.1:8010`，数据保存在命名卷中。若�
 
 密码通过交互输入。关闭初始化不会删除已经存在的演示账号，已有演示数据库请继续仅用于演示。
 
-## 代码导航与简历贡献范围
+## 代码导航
 
 ```text
 backend/supportflow/
@@ -131,6 +131,4 @@ evaluation/              可重复检索样例
 scripts/                 启动、开户、评测与真实模型验收
 ```
 
-进一步阅读：[架构与 DeerFlow 对应关系](docs/architecture.md)、[DeerFlow 接入](docs/deerflow-integration.md)、[学习与面试路线](docs/learning-guide.md)。
-
-这份初始实现由 AI 辅助生成。用于求职前，应亲自运行、阅读并完成自己的修改和实验；简历准确说明二次开发及亲自验证的内容。
+进一步阅读：[架构与 DeerFlow 对应关系](docs/architecture.md)、[DeerFlow 接入](docs/deerflow-integration.md)、[实践与架构导读](docs/learning-guide.md)。
