@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
@@ -56,7 +57,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
   HTMLDialogElement.prototype.showModal = vi.fn();
   HTMLDialogElement.prototype.close = vi.fn();
-  vi.mocked(api).mockImplementation(async (path) => {
+  vi.mocked(api).mockImplementation(async (path, options) => {
     if (path === "/health")
       return { demo_enabled: true, agent_mode: "demo" } as never;
     if (path === "/auth/login")
@@ -77,7 +78,11 @@ beforeEach(() => {
         },
       } as never;
     if (path === "/conversations")
-      return { id: "conversation1", title: "新的技术咨询" } as never;
+      return (
+        options?.method === "POST"
+          ? { id: "conversation1", title: "新的技术咨询" }
+          : []
+      ) as never;
     if (path === "/drafts/draft1/confirm") return ticket as never;
     if (path === "/tickets/ticket1") return ticket as never;
     if (path === "/users") return [user] as never;
@@ -167,5 +172,77 @@ describe("SupportFlow main workflows", () => {
           .mock.calls.some(([path]) => path.includes("status=in_progress")),
       ).toBe(true),
     );
+  });
+
+  it("renders visible deltas then replaces the provisional reply with the authoritative result", async () => {
+    let finish: (() => void) | undefined;
+    vi.mocked(streamChat).mockImplementation(
+      async (_id, _text, _request, callback) => {
+        callback("delta", { message_key: "planning", text: "临时规划内容" });
+        callback("delta", { message_key: "answer", text: "检查应用" });
+        callback("delta", { message_key: "answer", text: "监听地址。" });
+        await new Promise<void>((resolve) => {
+          finish = () => {
+            callback("result", {
+              message_id: "reply-stream",
+              answer: "检查应用监听地址。",
+              sources: [],
+              traces: [],
+              draft: null,
+              mode: "live",
+              duration_ms: 10,
+            });
+            callback("done", { run_id: "run-stream" });
+            resolve();
+          };
+        });
+      },
+    );
+    await login();
+    fireEvent.click(screen.getByRole("button", { name: /AI 支持助手/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "描述技术问题" }), {
+      target: { value: "FastAPI 返回 502" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "发送问题" }));
+    expect(await screen.findByText("检查应用监听地址。")).toBeTruthy();
+    expect(screen.getByLabelText("正在生成的回复")).toBeTruthy();
+    expect(screen.queryByText("临时规划内容")).toBeNull();
+    await act(async () => {
+      finish?.();
+    });
+    await waitFor(() =>
+      expect(screen.queryByLabelText("正在生成的回复")).toBeNull(),
+    );
+    expect(screen.getAllByText("检查应用监听地址。")).toHaveLength(1);
+  });
+
+  it("preserves a partial visible reply with an incomplete label after a stream failure", async () => {
+    vi.mocked(streamChat).mockImplementation(
+      async (_id, _text, _request, callback) => {
+        callback("tool", {
+          name: "inspect_log",
+          duration_ms: 1,
+          status: "completed",
+          input: { characters: 20 },
+        });
+        callback("delta", {
+          message_key: "answer",
+          text: "连接被拒绝可能与监听配置有关。",
+        });
+        throw new Error("连接中断");
+      },
+    );
+    await login();
+    fireEvent.click(screen.getByRole("button", { name: /AI 支持助手/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "描述技术问题" }), {
+      target: { value: "检查服务状态" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "发送问题" }));
+    expect(
+      await screen.findByText("回复中断，以上内容尚未完成，请重试。"),
+    ).toBeTruthy();
+    expect(screen.getByText("连接被拒绝可能与监听配置有关。")).toBeTruthy();
+    expect(screen.getByText("分析日志线索")).toBeTruthy();
+    expect(screen.queryByLabelText("正在生成的回复")).toBeNull();
   });
 });

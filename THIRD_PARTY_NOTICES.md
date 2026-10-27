@@ -9,6 +9,7 @@ MIT License
 
 Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 Copyright (c) 2025-2026 DeerFlow Authors
+Copyright (c) 2023 shadcn (UI component reference)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,3 +31,7 @@ SOFTWARE.
 ```
 
 Runtime and UI libraries retain their respective licenses in their distributions, including FastAPI, SQLAlchemy, LangChain, LangGraph, React, Vite and Lucide.
+
+The UI also uses Tailwind CSS, Radix primitives and shadcn-style components. The shadcn/ui component reference is MIT licensed: https://github.com/shadcn-ui/ui/blob/main/LICENSE.md. Its copyright notice is included in the shared MIT text above. Library license files remain in the installed distributions.
+
+Knowledge summaries are original concise Chinese summaries linked to official sources. Source URLs, upstream license links, retrieval times and hashes are recorded in `backend/supportflow/corpus/official/manifest.json` and explained in `docs/knowledge-sources.md`. Full extracted source caches are not committed to the repository.

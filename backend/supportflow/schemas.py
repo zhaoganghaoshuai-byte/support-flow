@@ -1,4 +1,6 @@
+from datetime import datetime, timezone
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -60,3 +62,30 @@ class NewDocument(Input):
     version: str = Field(default="通用", min_length=1, max_length=40)
     source: str = Field(default="团队知识库", min_length=1, max_length=500)
     content: str = Field(min_length=20, max_length=60000)
+    source_url: str | None = Field(default=None, max_length=1000)
+    source_license: str | None = Field(default=None, max_length=200)
+    retrieved_at: str | None = Field(default=None, max_length=40)
+
+    @field_validator("source_url")
+    @classmethod
+    def validate_source_url(cls, value):
+        if value is not None:
+            parsed = urlsplit(value)
+            if (
+                parsed.scheme not in {"https", "http"}
+                or not parsed.hostname
+                or parsed.username
+                or parsed.password
+            ):
+                raise ValueError("来源链接必须是无凭据的 HTTP(S) 地址")
+        return value
+
+    @field_validator("retrieved_at")
+    @classmethod
+    def validate_retrieved_at(cls, value):
+        if value is not None:
+            timestamp = datetime.fromisoformat(value)
+            if timestamp.tzinfo is None:
+                raise ValueError("抓取时间必须包含时区")
+            return timestamp.astimezone(timezone.utc).isoformat()
+        return value

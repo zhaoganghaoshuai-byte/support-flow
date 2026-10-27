@@ -302,7 +302,7 @@ def test_error_run_is_recorded_without_leaking_provider_secrets(client, customer
 def test_live_agent_uses_real_tool_loop_without_network(settings, monkeypatch):
     from dataclasses import replace
 
-    import langchain_openai
+    import supportflow.agent as support_agent
     from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
     from langchain_core.messages import AIMessage
 
@@ -314,6 +314,7 @@ def test_live_agent_uses_real_tool_loop_without_network(settings, monkeypatch):
         responses=[
             AIMessage(
                 content="",
+                additional_kwargs={"reasoning_content": "PRIVATE_REASONING_SENTINEL"},
                 tool_calls=[
                     {
                         "name": "search_knowledge",
@@ -323,10 +324,13 @@ def test_live_agent_uses_real_tool_loop_without_network(settings, monkeypatch):
                     }
                 ],
             ),
-            AIMessage(content="根据监听地址的排查资料，先验证 Uvicorn 的监听配置 [1]。"),
+            AIMessage(
+                content="根据监听地址的排查资料，先验证 Uvicorn 的监听配置 [1]。",
+                additional_kwargs={"reasoning_content": "PRIVATE_REASONING_SENTINEL"},
+            ),
         ]
     )
-    monkeypatch.setattr(langchain_openai, "ChatOpenAI", lambda **kwargs: model)
+    monkeypatch.setattr(support_agent, "create_chat_model", lambda settings: model)
     with TestClient(
         create_app(replace(settings, agent_mode="live", api_key="test-only-key"))
     ) as connection:
@@ -343,6 +347,8 @@ def test_live_agent_uses_real_tool_loop_without_network(settings, monkeypatch):
         assert final["mode"] == "live"
         assert final["sources"][0]["document_id"] == "fastapi-502"
         assert len(final["traces"]) == 1
+        assert any(event == "delta" and data["text"] for event, data in result)
+        assert "PRIVATE_REASONING_SENTINEL" not in str(result)
 
 
 def test_active_run_admission_is_arbitrated_by_database(client, customer):

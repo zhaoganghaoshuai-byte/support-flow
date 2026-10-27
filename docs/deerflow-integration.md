@@ -4,11 +4,11 @@
 
 ## 1. 安装
 
-在用于运行 DeerFlow 的 Python 环境中安装：
+假设两个仓库位于同一父目录，在 SupportFlow 根目录使用运行 DeerFlow 的 Python 环境安装：
 
 ```powershell
-python -m pip install -e G:/Agent/deer-flow-main/backend/packages/extension-api
-python -m pip install -e G:/Agent/support-flow
+python -m pip install -e ../deer-flow-main/backend/packages/extension-api
+python -m pip install -e .
 ```
 
 也可用 DeerFlow 的扩展管理命令安装这个可信本地目录；源环境必须能解析到 0.2.9 公共契约。加载入口为 `supportflow.deerflow_extension:install`。

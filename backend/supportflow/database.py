@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-from .models import Base
+from .migration import migrate_database
 
 
-def make_database(url: str):
+def make_engine(url: str):
     sqlite = url.startswith("sqlite")
     engine = create_engine(
         url,
@@ -19,5 +19,17 @@ def make_database(url: str):
             connection.execute("PRAGMA journal_mode=WAL")
             connection.execute("PRAGMA busy_timeout=15000")
 
-    Base.metadata.create_all(engine)
+    if engine.dialect.name not in {"sqlite", "postgresql"}:
+        engine.dispose()
+        raise ValueError("SupportFlow supports SQLite or PostgreSQL business databases")
+    return engine
+
+
+def make_database(url: str):
+    engine = make_engine(url)
+    try:
+        migrate_database(engine)
+    except Exception:
+        engine.dispose()
+        raise
     return engine, sessionmaker(engine, expire_on_commit=False)

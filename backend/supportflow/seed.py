@@ -1,11 +1,16 @@
 """Explicit synthetic demo users, tickets and local teaching documents."""
 
+import hashlib
+import logging
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
+from .knowledge import DOCUMENT_LIMIT
 from .models import KnowledgeDocument, Ticket, TicketComment, TicketEvent, User, uid
 from .security import hash_password
+
+logger = logging.getLogger(__name__)
 
 DEMO_PASSWORD = "SupportFlow123!"
 ACCOUNTS = [
@@ -16,7 +21,7 @@ ACCOUNTS = [
 ]
 
 
-def seed(db):
+def seed(db, *, include_official=True):
     for email, name, role in ACCOUNTS:
         if not db.scalar(select(User).where(User.email == email)):
             db.add(
@@ -27,21 +32,43 @@ def seed(db):
     customer = db.scalar(select(User).where(User.email == ACCOUNTS[1][0]))
     owner = db.scalar(select(User).where(User.email == ACCOUNTS[2][0]))
     corpus = Path(__file__).parent / "corpus"
-    for path in sorted(corpus.glob("*.md")):
+    remaining = max(
+        0, DOCUMENT_LIMIT - db.scalar(select(func.count()).select_from(KnowledgeDocument))
+    )
+    skipped = 0
+    for path in sorted(corpus.rglob("*.md")):
+        if not include_official and "official" in path.relative_to(corpus).parts:
+            continue
+        if db.get(KnowledgeDocument, path.stem):
+            continue
+        if not remaining:
+            skipped += 1
+            continue
         meta_text, content = path.read_text(encoding="utf-8").split("\n---\n", 1)
         meta = dict(line.split(": ", 1) for line in meta_text.splitlines())
-        if not db.get(KnowledgeDocument, path.stem):
-            db.add(
-                KnowledgeDocument(
-                    id=path.stem,
-                    title=meta["title"],
-                    product=meta["product"],
-                    version=meta["version"],
-                    source=meta["source"],
-                    content=content.strip(),
-                    created_by=owner.id,
-                )
+        db.add(
+            KnowledgeDocument(
+                id=path.stem,
+                title=meta["title"],
+                product=meta["product"],
+                version=meta["version"],
+                source=meta["source"],
+                source_url=meta.get("source_url"),
+                source_license=meta.get("source_license"),
+                retrieved_at=meta.get("retrieved_at"),
+                content_hash=hashlib.sha256(content.strip().encode("utf-8")).hexdigest(),
+                content=content.strip(),
+                created_by=owner.id,
             )
+        )
+        remaining -= 1
+    if skipped:
+        logger.warning(
+            "Knowledge document limit (%s) reached; skipped %s missing built-in documents; "
+            "existing documents retained",
+            DOCUMENT_LIMIT,
+            skipped,
+        )
     for index, (title, description, priority, status, category) in enumerate(
         [
             (

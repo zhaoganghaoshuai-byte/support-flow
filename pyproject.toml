@@ -11,12 +11,16 @@ dependencies = [
   "fastapi>=0.115,<1", "uvicorn[standard]>=0.34,<1",
   "sqlalchemy>=2.0,<3", "pydantic>=2.10,<3", "python-dotenv>=1,<2",
   "langchain>=1.3,<2", "langgraph>=1.2,<2", "langchain-openai>=1.2,<2",
+  "langchain-deepseek>=1.1.1,<2",
   "langgraph-checkpoint-sqlite>=3,<4", "httpx>=0.28,<1",
+  "alembic>=1.13,<2",
+  "rank-bm25>=0.2.2,<0.3", "beautifulsoup4>=4.12,<5",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.14,<1"]
 postgres = ["psycopg[binary]>=3.2,<4"]
+vector = ["chromadb>=1.0,<2"]
 deerflow = ["deerflow-extension-api>=0.2.9,<0.3"]
 
 [project.scripts]
@@ -26,7 +30,7 @@ support-flow = "supportflow.cli:main"
 where = ["backend"]
 
 [tool.setuptools.package-data]
-supportflow = ["corpus/*.md"]
+supportflow = ["corpus/*.md", "corpus/official/*.md", "corpus/official/manifest.json", "migrations/script.py.mako"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

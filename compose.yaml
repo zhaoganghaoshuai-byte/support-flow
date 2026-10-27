@@ -1,10 +1,33 @@
 services:
-  supportflow:
-    build: .
+  web:
+    build:
+      context: .
+      target: web
     ports:
-      - "127.0.0.1:8010:8010"
+      - "127.0.0.1:8010:80"
+    # Nginx listens on 80 inside its container; ingress stays loopback-only.
+    depends_on:
+      api:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  api:
+    build:
+      context: .
+      target: api
+      args:
+        SUPPORTFLOW_PYTHON_EXTRAS: ${SUPPORTFLOW_PYTHON_EXTRAS:-postgres}
     environment:
+      SUPPORTFLOW_DATABASE_URL: postgresql+psycopg://supportflow@postgres:5432/supportflow
+      # libpq reads PGPASSWORD, avoiding URL-encoding bugs for special characters.
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before Docker startup}
       SUPPORTFLOW_AGENT_MODE: ${SUPPORTFLOW_AGENT_MODE:-demo}
+      SUPPORTFLOW_MODEL_PROVIDER: ${SUPPORTFLOW_MODEL_PROVIDER:-auto}
       SUPPORTFLOW_SEED_DEMO: ${SUPPORTFLOW_SEED_DEMO:-true}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
@@ -12,14 +35,37 @@ services:
       SUPPORTFLOW_API_KEY: ${SUPPORTFLOW_API_KEY:-}
       SUPPORTFLOW_BASE_URL: ${SUPPORTFLOW_BASE_URL:-}
       SUPPORTFLOW_MODEL: ${SUPPORTFLOW_MODEL:-}
+      SUPPORTFLOW_RETRIEVAL_MODE: ${SUPPORTFLOW_RETRIEVAL_MODE:-bm25}
+      SUPPORTFLOW_EMBEDDING_BASE_URL: ${SUPPORTFLOW_EMBEDDING_BASE_URL:-}
+      SUPPORTFLOW_EMBEDDING_MODEL: ${SUPPORTFLOW_EMBEDDING_MODEL:-bge-m3}
+      SUPPORTFLOW_EMBEDDING_API_KEY: ${SUPPORTFLOW_EMBEDDING_API_KEY:-}
+      SUPPORTFLOW_VECTOR_MIN_SIMILARITY: ${SUPPORTFLOW_VECTOR_MIN_SIMILARITY:-0.35}
     volumes:
       - supportflow-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     init: true
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/api/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: supportflow
+      POSTGRES_USER: supportflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before Docker startup}
+    volumes:
+      - supportflow-postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supportflow -d supportflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 volumes:
   supportflow-data:
+  supportflow-postgres-data:

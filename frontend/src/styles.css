@@ -1,4 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;450;500;550;600;650;700&family=Manrope:wght@400;500;600;650;700;750;800&display=swap");
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@source "./";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: #273834;
+  --color-card: #ffffff;
+  --color-card-foreground: #273834;
+  --color-primary: #173f37;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #edf2e7;
+  --color-secondary-foreground: #496c3e;
+  --color-accent: #edf1e8;
+  --color-border: #e8ece7;
+  --color-input: #dfe6df;
+  --color-ring: #79a48f;
+  --color-destructive: #a45c43;
+}
 
 :root {
   font-family:
@@ -1037,6 +1057,127 @@ tbody tr:last-child td {
 .modal::backdrop {
   background: #132f2566;
   backdrop-filter: blur(3px);
+}
+
+.dialog-overlay {
+  background: #132f2566;
+}
+.modal {
+  margin: 0;
+}
+.knowledge-filters {
+  padding: 4px 0 0 62px;
+}
+.knowledge-filters .filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #7b8e69;
+  padding-bottom: 9px;
+}
+.knowledge-filters label {
+  font-size: 10px;
+  min-width: 145px;
+  gap: 5px;
+  color: #7b8e69;
+}
+.knowledge-filters select {
+  font-size: 11px;
+  padding: 8px 25px 8px 10px;
+  background: #fafcf7;
+}
+.knowledge-document > .document-card {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.knowledge-document:hover {
+  border-color: #c9d7ba;
+}
+.result-open {
+  display: block;
+  padding: 0;
+  background: none;
+  border: 0;
+  width: 100%;
+  text-align: left;
+}
+.result-open > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+}
+.source-provenance {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 12px 0 17px;
+  font-size: 9px;
+  color: #81936e;
+}
+.source-provenance a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #527343;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.source-provenance .source-license {
+  font-size: 8px;
+  gap: 4px;
+  color: #7b8e69;
+  padding: 2px 5px;
+}
+.source-provenance.compact {
+  margin: 0;
+  padding: 10px 18px 12px;
+  border-top: 1px solid #edf1e6;
+}
+.result-card > .source-provenance {
+  margin-bottom: 0;
+}
+.streaming-content {
+  margin-top: 15px;
+}
+.stream-incomplete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #ad805d;
+  margin-top: 10px;
+}
+.stream-cursor {
+  display: inline-block;
+  width: 5px;
+  height: 13px;
+  background: #8ba76d;
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: stream-blink 1s step-end infinite;
+}
+@keyframes stream-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (max-width: 720px) {
+  .knowledge-filters {
+    padding-left: 0;
+  }
+  .knowledge-filters label {
+    min-width: 0;
+    flex: 1;
+  }
+  .knowledge-filters .filter-label {
+    width: 100%;
+    padding-bottom: 0;
+  }
 }
 .modal-heading {
   display: flex;

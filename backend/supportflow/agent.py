@@ -21,6 +21,7 @@ from pydantic import ValidationError
 
 from . import knowledge, services
 from .config import ROOT
+from .model_factory import create_chat_model
 from .schemas import DraftInput
 
 PROMPT = """你是 SupportFlow 技术支持助手，用中文协助排障。
@@ -104,6 +105,9 @@ class AgentEngine:
             except HTTPException as error:
                 status = "failed"
                 return {"error": str(error.detail), "status_code": error.status_code}
+            except knowledge.RetrievalUnavailable as error:
+                status = "failed"
+                return {"error": str(error), "status_code": 503}
             except ValidationError:
                 status = "failed"
                 return {"error": "工具参数不合法，请检查字段长度、优先级与分类后重试"}
@@ -128,7 +132,7 @@ class AgentEngine:
 
             def action():
                 with self.sessions() as db:
-                    matches = knowledge.search(db, query, product, version)
+                    matches = knowledge.search(db, query, product, version, settings=self.settings)
                 with evidence_lock:
                     for item in matches:
                         existing = next(
@@ -287,20 +291,7 @@ class AgentEngine:
         checkpoint = str(self.settings.data_dir / "checkpoints.db")
         with SqliteSaver.from_conn_string(checkpoint) as saver:
             if self.settings.agent_mode == "live":
-                from langchain_openai import ChatOpenAI
-
-                if not self.settings.api_key or self.settings.api_key.startswith("your_"):
-                    raise ValueError("请先配置模型密钥，或切回 demo 模式")
-                model = ChatOpenAI(
-                    model=self.settings.model,
-                    api_key=self.settings.api_key,
-                    base_url=self.settings.base_url,
-                    temperature=0,
-                    max_tokens=2200,
-                    timeout=60,
-                    max_retries=1,
-                    use_responses_api=False,
-                )
+                model = create_chat_model(self.settings)
                 skill_path = ROOT / "skills" / "support-triage" / "SKILL.md"
                 skill = skill_path.read_text(encoding="utf-8") if skill_path.is_file() else ""
                 graph = create_agent(
@@ -324,7 +315,38 @@ class AgentEngine:
                 "event": "status",
                 "data": {"label": "正在检索知识与分析问题", "mode": self.settings.agent_mode},
             }
-            for update in graph.stream(inputs, config=config, stream_mode="updates"):
+            streaming = self.settings.agent_mode == "live"
+            events = graph.stream(
+                inputs,
+                config=config,
+                stream_mode=["messages", "updates"] if streaming else "updates",
+            )
+            for event in events:
+                kind, update = event if streaming else ("updates", event)
+                if kind == "messages":
+                    message, metadata = update
+                    if metadata.get("langgraph_node") == "model":
+                        content = message.content
+                        text = (
+                            content
+                            if isinstance(content, str)
+                            else "".join(
+                                block.get("text", "")
+                                for block in content
+                                if isinstance(block, dict) and block.get("type") == "text"
+                            )
+                        )
+                        if text:
+                            yield {
+                                "event": "delta",
+                                "data": {
+                                    "text": text,
+                                    "message_key": str(
+                                        message.id or metadata.get("langgraph_step", "model")
+                                    ),
+                                },
+                            }
+                    continue
                 for name, value in update.items():
                     if not isinstance(value, dict):
                         continue

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { FormEvent } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -34,10 +34,17 @@ import type { LucideIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api, setToken, streamChat } from "./api";
+import { Button } from "./components/ui/button";
+import { Card } from "./components/ui/card";
+import { Badge as StatusBadge } from "./components/ui/badge";
+import { Input } from "./components/ui/input";
+import { AppDialog as Modal } from "./components/app-dialog";
+import { DocumentDialog as DocumentModal } from "./components/document-dialog";
+import { KnowledgePage } from "./components/knowledge-page";
+import { useResource as useLoad } from "./hooks/use-resource";
 import type {
   Conversation,
   Dashboard,
-  Document,
   Draft,
   Message,
   Run,
@@ -92,30 +99,6 @@ function date(value: string, full = false) {
     ...(full ? { hour: "2-digit", minute: "2-digit" } : {}),
   }).format(new Date(value));
 }
-function useLoad<T>(path: string, revision = 0) {
-  const [data, setData] = useState<T | null>(null),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError("");
-    api<T>(path)
-      .then((value) => {
-        if (active) setData(value);
-      })
-      .catch((reason) => {
-        if (active) setError(reason.message);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [path, revision]);
-  return { data, error, loading };
-}
 function Mark({ small = false }: { small?: boolean }) {
   return (
     <span className={"brand-mark " + (small ? "small" : "")}>
@@ -125,10 +108,10 @@ function Mark({ small = false }: { small?: boolean }) {
 }
 function Badge({ status }: { status: string }) {
   return (
-    <span className={"badge " + status}>
+    <StatusBadge className={"badge " + status}>
       <i />
       {STATUS[status] || status}
-    </span>
+    </StatusBadge>
   );
 }
 function Priority({ value }: { value: string }) {
@@ -167,53 +150,20 @@ function Empty({
   );
 }
 function ErrorBox({ message }: { message: string }) {
-  return message ? <div className="error-box">{message}</div> : null;
+  return message ? (
+    <div className="error-box" role="alert">
+      {message}
+    </div>
+  ) : null;
 }
 function Loading() {
   return (
-    <div className="loading">
+    <div className="loading" role="status" aria-live="polite">
       <LoaderCircle className="spin" size={22} />
       <span>正在加载…</span>
     </div>
   );
 }
-function Modal({
-  title,
-  children,
-  onClose,
-  wide = false,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-  wide?: boolean;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const dialog = ref.current;
-    dialog?.showModal();
-    return () => dialog?.close();
-  }, []);
-  return (
-    <dialog
-      ref={ref}
-      className={"modal " + (wide ? "wide" : "")}
-      onCancel={onClose}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div className="modal-heading">
-        <h2>{title}</h2>
-        <button className="icon-button" aria-label="关闭窗口" onClick={onClose}>
-          <X size={20} />
-        </button>
-      </div>
-      <div className="modal-body">{children}</div>
-    </dialog>
-  );
-}
-
 function Login({ onLogin }: { onLogin: (user: User) => void }) {
   const [email, setEmail] = useState("engineer@supportflow.local"),
     [password, setPassword] = useState("SupportFlow123!"),
@@ -290,7 +240,7 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
           <p className="muted">登录后，继续跟进问题与团队协作。</p>
           <label>
             工作邮箱
-            <input
+            <Input
               autoComplete="username"
               type="email"
               value={email}
@@ -300,7 +250,7 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
           </label>
           <label>
             密码
-            <input
+            <Input
               autoComplete="current-password"
               type="password"
               value={password}
@@ -309,11 +259,11 @@ function Login({ onLogin }: { onLogin: (user: User) => void }) {
             />
           </label>
           <ErrorBox message={error} />
-          <button className="button primary login-submit" disabled={busy}>
+          <Button className="login-submit" disabled={busy} aria-busy={busy}>
             {busy ? <LoaderCircle className="spin" size={17} /> : null}
             进入工作台
             <ArrowRight size={17} />
-          </button>
+          </Button>
           {health?.demo_enabled && (
             <div className="demo-login">
               <div>
@@ -484,7 +434,7 @@ function DashboardPage({
       <ErrorBox message={error} />
       <div className="stats-grid">
         {cards.map(({ label, value, icon: Icon, note, color }) => (
-          <div className="stat-card" key={label}>
+          <Card className="stat-card" key={label}>
             <div className="stat-top">
               <span>{label}</span>
               <span className={"stat-icon " + color}>
@@ -493,7 +443,7 @@ function DashboardPage({
             </div>
             <strong>{value.toString().padStart(2, "0")}</strong>
             <p>{note}</p>
-          </div>
+          </Card>
         ))}
       </div>
       <div className="assist-banner">
@@ -1129,275 +1079,6 @@ function formatEvent(detail: string) {
   }
 }
 
-function DocumentModal({ id, onClose }: { id: string; onClose: () => void }) {
-  const { data, error } = useLoad<Document>("/knowledge/" + id);
-  return (
-    <Modal wide title={data?.title || "知识文档"} onClose={onClose}>
-      <ErrorBox message={error} />
-      {data ? (
-        <>
-          <div className="document-meta">
-            <span className="product-tag">{data.product}</span>
-            <span>{data.version}</span>
-            <span>{data.source}</span>
-          </div>
-          <div className="markdown document-content">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {data.content || ""}
-            </ReactMarkdown>
-          </div>
-        </>
-      ) : (
-        <Loading />
-      )}
-    </Modal>
-  );
-}
-
-function KnowledgePage({ user, notify }: { user: User; notify: Notify }) {
-  const [revision, setRevision] = useState(0),
-    [query, setQuery] = useState(""),
-    [results, setResults] = useState<Source[] | null>(null),
-    [opened, setOpened] = useState(""),
-    [adding, setAdding] = useState(false),
-    [busy, setBusy] = useState(false),
-    [content, setContent] = useState("");
-  const { data: documents, error } = useLoad<Document[]>(
-    "/knowledge",
-    revision,
-  );
-  async function search(event: FormEvent) {
-    event.preventDefault();
-    if (!query.trim()) {
-      setResults(null);
-      return;
-    }
-    setBusy(true);
-    try {
-      setResults(
-        (
-          await api<{ items: Source[] }>(
-            "/knowledge/search?q=" + encodeURIComponent(query),
-          )
-        ).items,
-      );
-    } catch (reason) {
-      notify((reason as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function add(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    const form = new FormData(event.currentTarget);
-    try {
-      await api("/knowledge", {
-        method: "POST",
-        body: JSON.stringify({ ...Object.fromEntries(form), content }),
-      });
-      setAdding(false);
-      setContent("");
-      setRevision((v) => v + 1);
-      setResults(null);
-      notify("文档已入库，可立即检索");
-    } catch (reason) {
-      notify((reason as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div className="page">
-      <div className="page-title">
-        <div>
-          <span className="eyebrow">TEAM KNOWLEDGE</span>
-          <h1>让经验，成为下一次的答案。</h1>
-          <p>维护团队运维知识，为 AI 回答提供可追溯的依据。</p>
-        </div>
-        {user.role !== "requester" && (
-          <button className="button primary" onClick={() => setAdding(true)}>
-            <Plus size={17} />
-            添加知识
-          </button>
-        )}
-      </div>
-      <div className="knowledge-search panel">
-        <div className="knowledge-search-icon">
-          <BookOpen size={22} />
-        </div>
-        <form onSubmit={search}>
-          <input
-            aria-label="检索知识库"
-            placeholder="描述问题，检索相关的排查经验…"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              if (!event.target.value) setResults(null);
-            }}
-          />
-          <button className="button primary" disabled={busy}>
-            {busy ? (
-              <LoaderCircle className="spin" size={16} />
-            ) : (
-              <Search size={16} />
-            )}
-            检索知识
-          </button>
-        </form>
-        <span>BM25 关键词检索 · 支持中文与英文</span>
-      </div>
-      <ErrorBox message={error} />
-      <div className="section-label">
-        <h2>
-          {results ? "检索结果" : "全部知识"}{" "}
-          <span className="count">
-            {results ? results.length : documents?.length || 0}
-          </span>
-        </h2>
-        <span>
-          {results ? "按相关度排序" : "共享团队资料 · 内置资料为自编教学内容"}
-        </span>
-      </div>
-      {results ? (
-        <div className="search-results">
-          {results.length ? (
-            results.map((item) => (
-              <button
-                className="panel result-card"
-                key={item.chunk_id}
-                onClick={() => setOpened(item.document_id)}
-              >
-                <div>
-                  <span className="product-tag">{item.product}</span>
-                  <span className="muted">相关度 {item.score.toFixed(2)}</span>
-                </div>
-                <h3>
-                  {item.title}
-                  <ArrowUpRight size={16} />
-                </h3>
-                <p>{item.content.slice(0, 250)}</p>
-                <small>
-                  {item.heading} · {item.version}
-                </small>
-              </button>
-            ))
-          ) : (
-            <Empty
-              title="没有找到匹配内容"
-              description="试试产品名、错误码或日志里的关键词。"
-            />
-          )}
-        </div>
-      ) : (
-        <div className="knowledge-grid">
-          {documents?.map((document, index) => (
-            <button
-              className="panel document-card"
-              key={document.id}
-              onClick={() => setOpened(document.id)}
-            >
-              <div className="document-card-top">
-                <span className={"document-symbol tone-" + (index % 4)}>
-                  <FileText size={24} />
-                </span>
-                <ArrowUpRight size={17} />
-              </div>
-              <span className="product-tag">{document.product}</span>
-              <h3>{document.title}</h3>
-              <p>{document.source}</p>
-              <div className="document-card-foot">
-                <span>
-                  {document.characters.toLocaleString()} 字符 ·{" "}
-                  {document.version}
-                </span>
-                <span>{date(document.created_at)}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-      {opened && <DocumentModal id={opened} onClose={() => setOpened("")} />}{" "}
-      {adding && (
-        <Modal title="添加团队知识" onClose={() => setAdding(false)}>
-          <form className="stack-form" onSubmit={add}>
-            <label>
-              文档标题
-              <input name="title" minLength={3} maxLength={200} required />
-            </label>
-            <div className="form-row">
-              <label>
-                产品
-                <input
-                  name="product"
-                  placeholder="例如 FastAPI"
-                  required
-                  maxLength={80}
-                />
-              </label>
-              <label>
-                版本
-                <input
-                  name="version"
-                  defaultValue="通用"
-                  required
-                  maxLength={40}
-                />
-              </label>
-            </div>
-            <label>
-              来源说明
-              <input
-                name="source"
-                defaultValue="团队知识库"
-                required
-                maxLength={500}
-              />
-            </label>
-            <label>
-              正文（Markdown 或纯文本）
-              <textarea
-                rows={10}
-                value={content}
-                onChange={(event) => setContent(event.target.value)}
-                minLength={20}
-                maxLength={60000}
-                required
-              />
-            </label>
-            <label className="file-picker">
-              <FileText size={16} />
-              或读取本地 .md / .txt 文件
-              <input
-                type="file"
-                accept=".md,.txt"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    if (file.size > 240000) {
-                      notify("文件过大，请控制在 6 万字符内");
-                      return;
-                    }
-                    setContent((await file.text()).slice(0, 60000));
-                  }
-                }}
-              />
-            </label>
-            <button className="button primary" disabled={busy}>
-              {busy ? (
-                <LoaderCircle className="spin" size={16} />
-              ) : (
-                <Plus size={16} />
-              )}
-              保存并加入检索
-            </button>
-          </form>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
 function AssistantPage({
   initialPrompt,
   clearPrompt,
@@ -1421,7 +1102,11 @@ function AssistantPage({
     [revision, setRevision] = useState(0),
     [sourceOpen, setSourceOpen] = useState(""),
     [sideOpen, setSideOpen] = useState(true),
-    [confirming, setConfirming] = useState("");
+    [confirming, setConfirming] = useState(""),
+    [pendingAnswer, setPendingAnswer] = useState<{
+      messageKey: string;
+      text: string;
+    } | null>(null);
   const { data: conversations } = useLoad<Conversation[]>(
     "/conversations",
     revision,
@@ -1440,7 +1125,7 @@ function AssistantPage({
   }, [initialPrompt, clearPrompt]);
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, busy, traces]);
+  }, [messages, busy, traces, pendingAnswer?.text]);
   async function selectConversation(id: string) {
     if (busy) return;
     setLoading(true);
@@ -1449,6 +1134,7 @@ function AssistantPage({
       setConversationId(id);
       setMessages(history);
       setTraces([]);
+      setPendingAnswer(null);
     } catch (reason) {
       notify((reason as Error).message);
     } finally {
@@ -1462,8 +1148,12 @@ function AssistantPage({
     setInput("");
     setBusy(true);
     setTraces([]);
+    setPendingAnswer(null);
     setStatus("正在建立排查任务");
     let id = conversationId;
+    let finalReceived = false;
+    let provisional = { messageKey: "", text: "" };
+    const observedTraces: Trace[] = [];
     try {
       if (!id) {
         const conversation = await api<Conversation>("/conversations", {
@@ -1480,9 +1170,25 @@ function AssistantPage({
       await streamChat(id, text, crypto.randomUUID(), (name, payload) => {
         const data = payload as Record<string, unknown>;
         if (name === "status") setStatus(String(data.label));
-        if (name === "tool")
+        if (name === "tool") {
+          observedTraces.push(data as unknown as Trace);
           setTraces((items) => [...items, data as unknown as Trace]);
+        }
+        if (name === "delta" && typeof data.text === "string") {
+          const messageKey = String(data.message_key || "current-response");
+          provisional = {
+            messageKey,
+            text:
+              provisional.messageKey === messageKey
+                ? provisional.text + data.text
+                : data.text,
+          };
+          setPendingAnswer({ ...provisional });
+          setStatus("正在整理排查建议");
+        }
         if (name === "result") {
+          finalReceived = true;
+          setPendingAnswer(null);
           setMessages((items) => [
             ...items,
             {
@@ -1504,6 +1210,18 @@ function AssistantPage({
     } catch (reason) {
       notify((reason as Error).message);
     } finally {
+      if (!finalReceived && provisional.text) {
+        setMessages((items) => [
+          ...items,
+          {
+            id: "partial-" + crypto.randomUUID(),
+            role: "assistant",
+            content: provisional.text,
+            metadata: { incomplete: true, traces: observedTraces },
+          },
+        ]);
+      }
+      setPendingAnswer(null);
       setBusy(false);
       setRevision((v) => v + 1);
       onChanged();
@@ -1548,6 +1266,7 @@ function AssistantPage({
             setConversationId("");
             setMessages([]);
             setTraces([]);
+            setPendingAnswer(null);
           }}
         >
           <Plus size={16} />
@@ -1667,6 +1386,12 @@ function AssistantPage({
                         {message.content}
                       </ReactMarkdown>
                     </div>
+                    {message.metadata?.incomplete && (
+                      <div className="stream-incomplete" role="status">
+                        <Clock3 size={13} />
+                        回复中断，以上内容尚未完成，请重试。
+                      </div>
+                    )}
                     {message.metadata?.sources &&
                       message.metadata.sources.length > 0 && (
                         <div className="citation-chips">
@@ -1712,6 +1437,27 @@ function AssistantPage({
                 </article>
               ))}
             </div>
+          )}
+          {pendingAnswer?.text && (
+            <article
+              className="message assistant streaming-content"
+              aria-label="正在生成的回复"
+            >
+              <span className="message-avatar assistant">
+                <Sparkles size={17} />
+              </span>
+              <div className="message-body">
+                <div className="message-author">
+                  SupportFlow<span className="tiny-pill">正在回复</span>
+                </div>
+                <div className="markdown">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {pendingAnswer.text}
+                  </ReactMarkdown>
+                  <span className="stream-cursor" aria-hidden="true" />
+                </div>
+              </div>
+            </article>
           )}
           {busy && (
             <div className="thinking">
@@ -1952,6 +1698,8 @@ export default function App() {
   const { data: health } = useLoad<{
     agent_mode: string;
     demo_enabled: boolean;
+    model_provider?: string;
+    model?: string;
   }>("/health");
   useEffect(() => {
     if (!sessionStorage.getItem("supportflow-token")) {
@@ -2075,9 +1823,13 @@ export default function App() {
             <b>{NAV.find((item) => item.id === page)?.label}</b>
           </div>
           <div className="topbar-actions">
-            <span className="mode-chip">
+            <span className="mode-chip" title={health?.model}>
               <i />
-              {health?.agent_mode === "live" ? "模型模式" : "离线演示"}
+              {health?.agent_mode === "live"
+                ? health.model_provider === "deepseek"
+                  ? "DeepSeek"
+                  : "模型模式"
+                : "离线演示"}
             </span>
             <span className="header-divider" />
             <button

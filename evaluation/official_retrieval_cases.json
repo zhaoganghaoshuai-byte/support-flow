@@ -1,0 +1,125 @@
+[
+  {
+    "id": "official-01",
+    "query": "FastAPI 项目只改了一行接口代码，重新打镜像却总在安装全部 Python 包，Dockerfile 的复制和安装步骤可以怎样调整？",
+    "expected_documents": ["official-fastapi-docker"],
+    "source_sections": ["official-fastapi-docker#构建镜像与复用缓存"]
+  },
+  {
+    "id": "official-02",
+    "query": "停止 FastAPI 容器时，应用退出阶段的清理函数没有正常执行，启动服务的 CMD 写法有什么需要核对的？",
+    "expected_documents": ["official-fastapi-docker"],
+    "source_sections": ["official-fastapi-docker#启动与优雅退出"]
+  },
+  {
+    "id": "official-03",
+    "query": "用户通过 HTTPS 访问 FastAPI，跳转链接却变成了 HTTP。服务前面还有一层网关，需要检查哪些转发信息以及信任范围？",
+    "expected_documents": ["official-fastapi-proxy"],
+    "source_sections": ["official-fastapi-proxy#转发头与可信代理"]
+  },
+  {
+    "id": "official-04",
+    "query": "网关把外部地址里的 /backend 前缀删掉再转给 FastAPI，接口能用但自动文档生成的地址不对，应用需要知道什么路径信息？",
+    "expected_documents": ["official-fastapi-proxy"],
+    "source_sections": ["official-fastapi-proxy#路径前缀与-root_path"]
+  },
+  {
+    "id": "official-05",
+    "query": "Compose 已把数据库排在后端前面启动，后端第一次连接仍然失败，过一会儿又正常了，怎样让后端等数据库真正可用再启动？",
+    "expected_documents": ["official-docker-startup", "docker-network"],
+    "source_sections": ["official-docker-startup#已启动与已就绪", "docker-network#启动顺序与健康检查"]
+  },
+  {
+    "id": "official-06",
+    "query": "Docker Compose 里有个一次性的建表任务，主服务必须等它正常执行完才能启动，依赖条件应该按进程已启动、健康还是成功结束来判断？",
+    "expected_documents": ["official-docker-startup"],
+    "source_sections": ["official-docker-startup#不同依赖条件"]
+  },
+  {
+    "id": "official-07",
+    "query": "Compose 把数据库的 5432 映射成电脑上的 15432，另一个容器里的后端应该连接哪个地址和端口，能直接写 localhost 吗？",
+    "expected_documents": ["official-docker-network", "docker-network"],
+    "source_sections": ["official-docker-network#服务名与容器端口", "docker-network#容器中的-localhost"]
+  },
+  {
+    "id": "official-08",
+    "query": "数据库容器升级重建之后，后端一直连着以前记下的 IP，导致请求失败。Compose 环境里应该用什么稳定入口，旧连接又该怎样处理？",
+    "expected_documents": ["official-docker-network"],
+    "source_sections": ["official-docker-network#更新后的连接"]
+  },
+  {
+    "id": "official-09",
+    "query": "SQLAlchemy 服务报数据库连接异常，我想先分清是从池里取连接、建立数据库连接还是执行 SQL 的事务出了问题，应该怎样划分排查阶段？",
+    "expected_documents": ["official-sqlalchemy-connections"],
+    "source_sections": ["official-sqlalchemy-connections#engine-与连接池"]
+  },
+  {
+    "id": "official-10",
+    "query": "SQLAlchemy 写事务执行到一半连接断了，连接恢复后能从刚才那条 SQL 接着跑吗？如果需要重做，怎样考虑完整事务和重复写入？",
+    "expected_documents": ["official-sqlalchemy-connections"],
+    "source_sections": ["official-sqlalchemy-connections#失效连接与事务边界"]
+  },
+  {
+    "id": "official-11",
+    "query": "我在 Linux 上有同名账号，但 PostgreSQL 还是不让我登录，操作系统用户和数据库角色是一回事吗，需要核对什么登录权限？",
+    "expected_documents": ["official-postgres-auth"],
+    "source_sections": ["official-postgres-auth#数据库角色与登录身份", "official-postgres-auth#核对认证条件"]
+  },
+  {
+    "id": "official-12",
+    "query": "PostgreSQL 同一个角色从两台机器连接到不同数据库时，能采用不同的身份验证方式吗，决定认证规则时会看哪些连接条件？",
+    "expected_documents": ["official-postgres-auth"],
+    "source_sections": ["official-postgres-auth#核对认证条件"]
+  },
+  {
+    "id": "official-13",
+    "query": "LangGraph 接口传入某个 thread_id 就能继续以前的对话吗？这个标识能否直接充当用户身份，还需要服务端检查什么？",
+    "expected_documents": ["official-langgraph-persistence"],
+    "source_sections": ["official-langgraph-persistence#checkpointer-与-thread_id"]
+  },
+  {
+    "id": "official-14",
+    "query": "用户开了新的 LangGraph 对话，还想沿用上一段会话保存的个人偏好，应该放在检查点里还是单独的数据存储里？内存实现能保证重启后还在吗？",
+    "expected_documents": ["official-langgraph-persistence"],
+    "source_sections": ["official-langgraph-persistence#store-与跨会话数据"]
+  },
+  {
+    "id": "official-15",
+    "query": "DeepSeek 调用返回 402，重新生成密钥也没解决问题，下一步应该检查账号的哪项状态？",
+    "expected_documents": ["official-deepseek-errors"],
+    "source_sections": ["official-deepseek-errors#请求格式与账号配置"]
+  },
+  {
+    "id": "official-16",
+    "query": "DeepSeek 接口分别返回 400 和 422 时，排查重点有什么区别，是先改请求结构还是核对参数取值？",
+    "expected_documents": ["official-deepseek-errors"],
+    "source_sections": ["official-deepseek-errors#请求格式与账号配置"]
+  },
+  {
+    "id": "official-17",
+    "query": "DeepSeek 调用连续出现 500 或 503，是否可以无限循环立即重试？服务端应怎样安排等待、超时和持续失败后的处理？",
+    "expected_documents": ["official-deepseek-errors"],
+    "source_sections": ["official-deepseek-errors#限流与服务端错误"]
+  },
+  {
+    "id": "official-18",
+    "query": "请给我一份家庭制作法式可颂面包的配方，包括用料比例和发酵时间。",
+    "expected_documents": [],
+    "source_sections": [],
+    "no_answer_reason": "烘焙知识不在技术支持资料范围内。"
+  },
+  {
+    "id": "official-19",
+    "query": "我想计算一颗新发现彗星的轨道偏心率，请提供对应的天文观测结果和计算依据。",
+    "expected_documents": [],
+    "source_sections": [],
+    "no_answer_reason": "资料没有天文观测数据或轨道计算说明。"
+  },
+  {
+    "id": "official-20",
+    "query": "家里的龟背竹叶片发黄需要施什么肥，室内养护时多久浇一次水？",
+    "expected_documents": [],
+    "source_sections": [],
+    "no_answer_reason": "园艺养护不在技术支持资料范围内。"
+  }
+]

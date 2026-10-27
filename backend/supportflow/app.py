@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import time
@@ -15,6 +16,7 @@ from . import knowledge, services
 from .agent import AgentEngine
 from .config import ROOT, Settings
 from .database import make_database
+from .model_factory import resolve_provider
 from .models import (
     AccessSession,
     AgentRun,
@@ -49,6 +51,8 @@ def create_app(settings: Settings | None = None):
     settings = settings or Settings.load()
     if settings.agent_mode not in {"demo", "live"}:
         raise ValueError("SUPPORTFLOW_AGENT_MODE must be demo or live")
+    if settings.retrieval_mode not in {"bm25", "hybrid", "vector"}:
+        raise ValueError("SUPPORTFLOW_RETRIEVAL_MODE must be bm25, hybrid or vector")
 
     @asynccontextmanager
     async def lifespan(app):
@@ -101,6 +105,9 @@ def create_app(settings: Settings | None = None):
             "status": "ok",
             "service": "support-flow",
             "agent_mode": settings.agent_mode,
+            "model_provider": resolve_provider(settings),
+            "model": settings.model,
+            "retrieval_mode": settings.retrieval_mode,
             "demo_enabled": settings.seed_demo,
         }
 
@@ -268,6 +275,10 @@ def create_app(settings: Settings | None = None):
                 "product": row.product,
                 "version": row.version,
                 "source": row.source,
+                "source_url": row.source_url,
+                "source_license": row.source_license,
+                "retrieved_at": row.retrieved_at,
+                "content_hash": row.content_hash,
                 "created_at": row.created_at,
                 "characters": len(row.content),
             }
@@ -282,16 +293,27 @@ def create_app(settings: Settings | None = None):
         user=Depends(current_user),
         db=Depends(db_session),
     ):
+        try:
+            items = knowledge.search(db, q, product, version, settings=settings)
+        except knowledge.RetrievalUnavailable as error:
+            raise HTTPException(503, str(error)) from error
         return {
-            "items": knowledge.search(db, q, product, version),
-            "method": "BM25 + Chinese bigrams",
+            "items": items,
+            "method": knowledge.METHOD
+            if settings.retrieval_mode == "bm25"
+            else settings.retrieval_mode,
+            "mode": settings.retrieval_mode,
         }
 
     @app.post("/api/knowledge", status_code=201)
     def add_document(payload: NewDocument, user=Depends(staff), db=Depends(db_session)):
         if db.scalar(select(func.count()).select_from(KnowledgeDocument)) >= 200:
             raise HTTPException(409, "本版本知识库上限为 200 份文档")
-        row = KnowledgeDocument(**payload.model_dump(), created_by=user.id)
+        row = KnowledgeDocument(
+            **payload.model_dump(),
+            created_by=user.id,
+            content_hash=hashlib.sha256(payload.content.encode("utf-8")).hexdigest(),
+        )
         db.add(row)
         db.commit()
         return {"id": row.id, "title": row.title}
@@ -303,7 +325,19 @@ def create_app(settings: Settings | None = None):
             raise HTTPException(404, "知识文档不存在")
         return {
             key: getattr(row, key)
-            for key in ("id", "title", "product", "version", "source", "content", "created_at")
+            for key in (
+                "id",
+                "title",
+                "product",
+                "version",
+                "source",
+                "source_url",
+                "source_license",
+                "retrieved_at",
+                "content_hash",
+                "content",
+                "created_at",
+            )
         }
 
     @app.get("/api/conversations")

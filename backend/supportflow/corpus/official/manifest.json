@@ -1,0 +1,221 @@
+{
+  "schema": "supportflow.official-summaries.v1",
+  "documents": [
+    {
+      "id": "official-fastapi-docker",
+      "title": "FastAPI 官方文档导读：容器部署与优雅退出",
+      "product": "FastAPI",
+      "version": "通用",
+      "summary_file": "official-fastapi-docker.md",
+      "source_url": "https://fastapi.tiangolo.com/deployment/docker/",
+      "source_license": "MIT",
+      "license_url": "https://github.com/fastapi/fastapi/blob/master/LICENSE",
+      "retrieved_at": "2026-10-27T07:41:00.286005+00:00",
+      "source_revision": null,
+      "content_hash": "b6a29012f26a7e7a2e75eb0175f66ebf541d31a7aa8a750dbf9556484e20fd58",
+      "source_sha256": "c9f1c4f41e25c489d9c4b0342eae96e437a6563567dc9c1178b0a57111e8be41",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "构建镜像与复用缓存",
+          "url": "https://fastapi.tiangolo.com/deployment/docker/#dockerfile"
+        },
+        {
+          "heading": "启动与优雅退出",
+          "url": "https://fastapi.tiangolo.com/deployment/docker/#use-cmd-exec-form"
+        }
+      ]
+    },
+    {
+      "id": "official-fastapi-proxy",
+      "title": "FastAPI 官方文档导读：代理转发头与路径前缀",
+      "product": "FastAPI",
+      "version": "通用",
+      "summary_file": "official-fastapi-proxy.md",
+      "source_url": "https://fastapi.tiangolo.com/advanced/behind-a-proxy/",
+      "source_license": "MIT",
+      "license_url": "https://github.com/fastapi/fastapi/blob/master/LICENSE",
+      "retrieved_at": "2026-10-27T07:40:57.430713+00:00",
+      "source_revision": null,
+      "content_hash": "4ddec3bfadf8f41ab14336817c01ca075aa84b010b1638e466924a37de979b1c",
+      "source_sha256": "a62ea3e0b2d290c949a43618e204e17bb2f0bab4110b0a138ce177dc264382e5",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "转发头与可信代理",
+          "url": "https://fastapi.tiangolo.com/advanced/behind-a-proxy/#proxy-forwarded-headers"
+        },
+        {
+          "heading": "路径前缀与 root_path",
+          "url": "https://fastapi.tiangolo.com/advanced/behind-a-proxy/#proxy-with-a-stripped-path-prefix"
+        }
+      ]
+    },
+    {
+      "id": "official-docker-startup",
+      "title": "Docker 官方文档导读：启动顺序与数据库就绪",
+      "product": "Docker",
+      "version": "通用",
+      "summary_file": "official-docker-startup.md",
+      "source_url": "https://docs.docker.com/compose/how-tos/startup-order/",
+      "source_license": "Apache-2.0",
+      "license_url": "https://github.com/docker/docs/blob/main/LICENSE",
+      "retrieved_at": "2026-10-27T07:40:51.711775+00:00",
+      "source_revision": null,
+      "content_hash": "f6610350021c59e66954d7fdc5883724d462b8e776fa5c9a20b78a3ab1ebae2d",
+      "source_sha256": "0e5d7a17f2fb5f17327008b880a7a8e7868bb8d4362bfca1526070261b25fb73",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "已启动与已就绪",
+          "url": "https://docs.docker.com/compose/how-tos/startup-order/#control-startup"
+        },
+        {
+          "heading": "不同依赖条件",
+          "url": "https://docs.docker.com/compose/how-tos/startup-order/#example"
+        }
+      ]
+    },
+    {
+      "id": "official-docker-network",
+      "title": "Docker 官方文档导读：Compose 服务发现与端口",
+      "product": "Docker",
+      "version": "通用",
+      "summary_file": "official-docker-network.md",
+      "source_url": "https://docs.docker.com/compose/how-tos/networking/",
+      "source_license": "Apache-2.0",
+      "license_url": "https://github.com/docker/docs/blob/main/LICENSE",
+      "retrieved_at": "2026-10-27T07:40:53.203260+00:00",
+      "source_revision": null,
+      "content_hash": "1c7b1fbeabc217b56976d0227b36c26f7ab5ad294c306f7a4b5f8b092ec0065d",
+      "source_sha256": "d2a4e247f4e60868013fb712bd3deedc75d31d503709cb5f23c90f9ccf05c408",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "服务名与容器端口",
+          "url": "https://docs.docker.com/compose/how-tos/networking/#default-network-and-service-discovery"
+        },
+        {
+          "heading": "更新后的连接",
+          "url": "https://docs.docker.com/compose/how-tos/networking/#updating-containers-on-the-network"
+        }
+      ]
+    },
+    {
+      "id": "official-sqlalchemy-connections",
+      "title": "SQLAlchemy 官方文档导读：连接池、失效连接与事务重试",
+      "product": "SQLAlchemy",
+      "version": "通用",
+      "summary_file": "official-sqlalchemy-connections.md",
+      "source_url": "https://docs.sqlalchemy.org/en/20/faq/connections.html",
+      "source_license": "MIT",
+      "license_url": "https://github.com/sqlalchemy/sqlalchemy/blob/main/LICENSE",
+      "retrieved_at": "2026-10-27T07:40:54.585230+00:00",
+      "source_revision": null,
+      "content_hash": "0ff8eb2cd4421181207c9c21b4cf0909e4e70d6b9cba700df5a2d71fcb71afa7",
+      "source_sha256": "2b7d28b9676a852ae7057ead551eea1b0d62f700b5102d289a3095444d7fd8d9",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "Engine 与连接池",
+          "url": "https://docs.sqlalchemy.org/en/20/faq/connections.html#how-do-i-pool-database-connections-are-my-connections-pooled"
+        },
+        {
+          "heading": "失效连接与事务边界",
+          "url": "https://docs.sqlalchemy.org/en/20/faq/connections.html#how-do-i-retry-a-statement-execution-automatically"
+        }
+      ]
+    },
+    {
+      "id": "official-postgres-auth",
+      "title": "PostgreSQL 官方文档导读：客户端身份认证",
+      "product": "PostgreSQL",
+      "version": "通用",
+      "summary_file": "official-postgres-auth.md",
+      "source_url": "https://www.postgresql.org/docs/current/client-authentication.html",
+      "source_license": "PostgreSQL License",
+      "license_url": "https://www.postgresql.org/about/licence/",
+      "retrieved_at": "2026-10-27T07:40:58.876481+00:00",
+      "source_revision": null,
+      "content_hash": "00ad115007a1c2662428c2cc7cb44cbaaf28b1cf6d517c9ea9159fb2f46c69d4",
+      "source_sha256": "9a5533731d07101d125fbc0da87841f494492ec99f97237565843910464bd15f",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "数据库角色与登录身份",
+          "url": "https://www.postgresql.org/docs/current/client-authentication.html"
+        },
+        {
+          "heading": "核对认证条件",
+          "url": "https://www.postgresql.org/docs/current/client-authentication.html"
+        }
+      ]
+    },
+    {
+      "id": "official-langgraph-persistence",
+      "title": "LangGraph 官方文档导读：检查点、会话与长期存储",
+      "product": "LangGraph",
+      "version": "通用",
+      "summary_file": "official-langgraph-persistence.md",
+      "source_url": "https://docs.langchain.com/oss/python/langgraph/persistence",
+      "source_license": "MIT",
+      "license_url": "https://github.com/langchain-ai/docs/blob/main/LICENSE",
+      "retrieved_at": "2026-10-27T07:40:50.270676+00:00",
+      "source_revision": null,
+      "content_hash": "a8214b0be1cfd41673835ae332f86c68f0cfbf66014ff6f86b219e2ee76bad61",
+      "source_sha256": "466ed495023c07eae4897d27d766336a1d28a87c998334dd947b7b09bec4bf88",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "Checkpointer 与 thread_id",
+          "url": "https://docs.langchain.com/oss/python/langgraph/persistence#checkpointer-vs-store"
+        },
+        {
+          "heading": "Store 与跨会话数据",
+          "url": "https://docs.langchain.com/oss/python/langgraph/persistence#checkpointer-vs-store"
+        }
+      ]
+    },
+    {
+      "id": "official-deepseek-errors",
+      "title": "DeepSeek 官方文档导读：请求错误、认证与限流",
+      "product": "DeepSeek",
+      "version": "通用",
+      "summary_file": "official-deepseek-errors.md",
+      "source_url": "https://api-docs.deepseek.com/quick_start/error_codes",
+      "source_license": "原站版权；仓库仅保存原创摘要",
+      "license_url": "https://api-docs.deepseek.com/",
+      "retrieved_at": "2026-10-27T07:40:55.955026+00:00",
+      "source_revision": null,
+      "content_hash": "80cfc13182365dcc07d18a15484ad0c12b17802df83aabb96fdee6e7008a263b",
+      "source_sha256": "b11f9d1ebdeace410231d6b876c7d8c880a099a5c70ffa889ce8ffce3aeee0f5",
+      "extraction_method": "readable-page-text",
+      "source_hash_kind": "sha256 of retrieved readable text, not raw HTTP bytes",
+      "summary_kind": "original Chinese summary grounded in the retrieved official documentation",
+      "sections": [
+        {
+          "heading": "请求格式与账号配置",
+          "url": "https://api-docs.deepseek.com/quick_start/error_codes"
+        },
+        {
+          "heading": "限流与服务端错误",
+          "url": "https://api-docs.deepseek.com/quick_start/error_codes"
+        }
+      ]
+    }
+  ]
+}

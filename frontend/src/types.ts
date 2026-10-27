@@ -44,7 +44,12 @@ export type Source = {
   content: string;
   score: number;
   citation: number;
+  source_url?: string | null;
+  source_license?: string | null;
+  retrieved_at?: string | null;
+  content_hash?: string | null;
 };
+export type KnowledgeSearchSource = Omit<Source, "citation">;
 export type Trace = {
   name: string;
   duration_ms: number;
@@ -72,6 +77,7 @@ export type Message = {
     draft?: Draft | null;
     mode?: string;
     duration_ms?: number;
+    incomplete?: boolean;
   };
 };
 export type Conversation = { id: string; title: string; updated_at: string };
@@ -84,6 +90,10 @@ export type Document = {
   characters: number;
   created_at: string;
   content?: string;
+  source_url?: string | null;
+  source_license?: string | null;
+  retrieved_at?: string | null;
+  content_hash?: string | null;
 };
 export type Dashboard = {
   total: number;
